@@ -6,7 +6,7 @@ const app = express();
 app.use(
   '/data',
   createProxyMiddleware({
-    target: 'wss://ws.bitstamp.net',
+    target: 'ws://ws.bitstamp.net',
     ws: true,
     changeOrigin: true,
     onError: (err, req, res) => {

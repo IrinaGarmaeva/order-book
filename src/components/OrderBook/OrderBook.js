@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { io } from 'socket.io-client';
+// import { io } from 'socket.io-client';
 import './orderBook.css';
 
 const OrderBook = () => {
@@ -10,24 +10,31 @@ const OrderBook = () => {
 
 
   useEffect(() => {
-    const socket = io('/data');
+    const ws = new WebSocket("wss://ws.bitstamp.net");
 
-    socket.on('connect', () => {
-      console.log(`Connected with id ${socket.id}`);
-      socket.emit('bts:subscribe', { channel: `order_book_${currencyPair}`})
-    })
+    const subscribe = {
+      event: 'bts:subscribe',
+      data: {
+        channel: `order_book_${currencyPair}`
+      }
+    }
 
-    socket.on('data', (response) => {
-      setOrders(response);
-      console.log(`Data received from server: ${JSON.stringify(response)}`);
-    });
+    ws.onopen = () => {
+      ws.send(JSON.stringify(subscribe));
+    };
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
+    ws.onmessage = (event) => {
+      const response = JSON.parse(event.data);
+      setOrders(response.data)
+      console.log(`Data received from server: ${response}`)
+    }
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
 
     return () => {
-      socket.disconnect();
+      ws.close();
     };
   }, [currencyPair])
 
@@ -70,29 +77,22 @@ return (
 export default OrderBook
 
 
-    // const ws = new WebSocket("wss://ws.bitstamp.net");
+    // const socket = io('/data');
 
-    // const subscribe = {
-    //   event: 'bts:subscribe',
-    //   data: {
-    //     channel: `order_book_${currencyPair}`
-    //   }
-    // }
+    // socket.on('connect', () => {
+    //   console.log(`Connected with id ${socket.id}`);
+    //   socket.emit('bts:subscribe', { channel: `order_book_${currencyPair}`})
+    // })
 
-    // ws.onopen = () => {
-    //   ws.send(JSON.stringify(subscribe));
-    // };
+    // socket.on('data', (response) => {
+    //   setOrders(response);
+    //   console.log(`Data received from server: ${JSON.stringify(response)}`);
+    // });
 
-    // ws.onmessage = (event) => {
-    //   const response = JSON.parse(event.data);
-    //   setOrders(response.data)
-    //   console.log(`Data received from server: ${response}`)
-    // }
-
-    // ws.onclose = () => {
-    //   console.log('WebSocket connection closed.');
-    // };
+    // socket.on('disconnect', () => {
+    //   console.log('Socket disconnected');
+    // });
 
     // return () => {
-    //   ws.close();
+    //   socket.disconnect();
     // };
